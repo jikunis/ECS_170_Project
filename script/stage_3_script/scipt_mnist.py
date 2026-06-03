@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 # load data
 data_loader = Dataset_Loader('MNIST', '')
-data_loader.dataset_source_folder_path = '/Users/arielpadovitz/Desktop/ECS170_Spring_2026_Source_Code_Template/data/stage_3_data/'
+data_loader.dataset_source_folder_path = '/Users/jonahkunis/Desktop/ECS_170_Project/data/stage_3_data/'
 data_loader.dataset_source_file_name = 'MNIST'
 loaded_data = data_loader.load()
 
@@ -24,7 +24,7 @@ print('Test Results:', metrics)
 # save results
 saver = Result_Saver('saver', '')
 saver.data = metrics
-saver.result_destination_folder_path = '/Users/arielpadovitz/Desktop/ECS170_Spring_2026_Source_Code_Template/result/stage_3_result/'
+saver.result_destination_folder_path = '/Users/jonahkunis/Desktop/ECS_170_Project/result/stage_3_result/'
 saver.result_destination_file_name = 'MNIST'
 saver.fold_count = 0
 saver.save()
@@ -34,5 +34,5 @@ plt.plot(cnn.loss_history)
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.title('MNIST CNN Learning Curve')
-plt.savefig('/Users/arielpadovitz/Desktop/ECS170_Spring_2026_Source_Code_Template/result/stage_3_result/MNIST_learning_curve.png')
+plt.savefig('/Users/jonahkunis/Desktop/ECS_170_Project/result/stage_3_result/MNIST_learning_curve.png')
 plt.close()

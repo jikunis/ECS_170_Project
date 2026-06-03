@@ -23,28 +23,29 @@ class Method_CNN_CIFAR(method, nn.Module):
         nn.Module.__init__(self)
 
         self.network = nn.Sequential(
-            # block 1: (3, 32, 32) -> (32, 16, 16)
-            nn.Conv2d(3, 32, kernel_size=3, padding=1),
+            # block 1: (3, 32, 32) -> (64, 16, 16)
+            nn.Conv2d(3, 64, kernel_size=3, padding=1),  # ABLATION: 32 -> 64 filters
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
 
-            # block 2: (32, 16, 16) -> (64, 8, 8)
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            # block 2: (64, 16, 16) -> (128, 8, 8)
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),  # ABLATION: 64 -> 128 filters
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
 
-            # block 3: (64, 8, 8) -> (128, 4, 4)
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            # block 3: (128, 8, 8) -> (256, 4, 4)
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),  # ABLATION: 128 -> 256 filters
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(128 * 4 * 4, 256),
+            nn.Linear(256 * 4 * 4, 256),  # ABLATION: input size updated
             nn.ReLU(),
-            nn.Dropout(0.5),
+            nn.Dropout(0.7),  # ABLATION: 0.5 -> 0.7
             nn.Linear(256, 10)
         )
+
 
     def forward(self, x):
         x = self.network(x)
@@ -61,9 +62,8 @@ class Method_CNN_CIFAR(method, nn.Module):
         loss_function = nn.CrossEntropyLoss()
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
 
-        # preprocess in numpy before sending to device
-        X_np = np.array(X, dtype=np.float32) / 255.0          # normalize 0-1
-        X_np = np.transpose(X_np, (0, 3, 1, 2))               # (N, H, W, C) -> (N, C, H, W)
+        X_np = np.array(X, dtype=np.float32) / 255.0
+        X_np = np.transpose(X_np, (0, 3, 1, 2))
         X_tensor = torch.tensor(X_np).to(device)
         y_tensor = torch.tensor(np.array(y, dtype=np.int64)).to(device)
 
@@ -94,14 +94,13 @@ class Method_CNN_CIFAR(method, nn.Module):
             if epoch % 5 == 0:
                 self.eval()
                 with torch.no_grad():
-                    # only evaluate on first 5000 samples to save memory
                     y_pred_sample = self.forward(X_tensor[:5000])
                     accuracy_evaluator.data = {
                         'true_y': y_tensor[:5000].cpu(),
                         'pred_y': y_pred_sample.max(1)[1].cpu()
                     }
-                    print(
-                        f'Epoch: {epoch} | Accuracy: {accuracy_evaluator.evaluate()["accuracy"]:.4f} | Loss: {epoch_loss:.4f}')
+                    print(f'Epoch: {epoch} | Accuracy: {accuracy_evaluator.evaluate()["accuracy"]:.4f} | Loss: {epoch_loss:.4f}')
+
     def test(self, X):
         device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
         self.to(device)

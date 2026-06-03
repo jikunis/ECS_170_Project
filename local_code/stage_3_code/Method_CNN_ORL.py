@@ -32,10 +32,10 @@ class Method_CNN_ORL(method, nn.Module):
         self.pool_2 = nn.MaxPool2d(kernel_size=2, stride=2)  # 56x46 -> 28x23
 
         # 64 * 28 * 23 = 41216
-        self.fc_layer_1 = nn.Linear(64 * 28 * 23, 128)  # change 256 to 128
+        self.fc_layer_1 = nn.Linear(64 * 28 * 23, 256)  # change 256 to 128
         self.activation_3 = nn.ReLU()
-        self.dropout = nn.Dropout(p=0.5)
-        self.fc_layer_2 = nn.Linear(128, 40)  # match input to 128
+        self.dropout = nn.Dropout(p=0.7)
+        self.fc_layer_2 = nn.Linear(256, 40)  # match input to 128
 
 
 

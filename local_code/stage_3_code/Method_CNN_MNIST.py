@@ -22,7 +22,6 @@ class Method_CNN_MNIST(method, nn.Module):
         method.__init__(self, mName, mDescription)
         nn.Module.__init__(self)
 
-        # MNIST: 28x28, 1 channel, 10 classes
         self.conv_layer_1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1)
         self.activation_1 = nn.ReLU()
         self.pool_1 = nn.MaxPool2d(kernel_size=2, stride=2)  # 28x28 -> 14x14
@@ -31,20 +30,25 @@ class Method_CNN_MNIST(method, nn.Module):
         self.activation_2 = nn.ReLU()
         self.pool_2 = nn.MaxPool2d(kernel_size=2, stride=2)  # 14x14 -> 7x7
 
-        # 64 channels * 7 * 7 = 3136
-        self.fc_layer_1 = nn.Linear(64 * 7 * 7, 128)
+        # ABLATION: added 3rd conv layer
+        self.conv_layer_3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
         self.activation_3 = nn.ReLU()
+        self.pool_3 = nn.MaxPool2d(kernel_size=2, stride=2)  # 7x7 -> 3x3
+
+        # ABLATION: FC expanded 128 -> 256 (128 * 3 * 3 = 1152)
+        self.fc_layer_1 = nn.Linear(128 * 3 * 3, 256)
+        self.activation_4 = nn.ReLU()
         self.dropout = nn.Dropout(p=0.5)
-        self.fc_layer_2 = nn.Linear(128, 10)
+        self.fc_layer_2 = nn.Linear(256, 10)
 
     def forward(self, x):
-        # x shape: (batch, 1, 28, 28)
         x = self.pool_1(self.activation_1(self.conv_layer_1(x)))
         x = self.pool_2(self.activation_2(self.conv_layer_2(x)))
+        x = self.pool_3(self.activation_3(self.conv_layer_3(x)))
 
-        x = x.view(x.size(0), -1)  # flatten
-        x = self.dropout(self.activation_3(self.fc_layer_1(x)))
-        x = self.fc_layer_2(x)     # raw logits
+        x = x.view(x.size(0), -1)
+        x = self.dropout(self.activation_4(self.fc_layer_1(x)))
+        x = self.fc_layer_2(x)
         return x
 
     def train_model(self, X, y):
@@ -56,8 +60,7 @@ class Method_CNN_MNIST(method, nn.Module):
         loss_function = nn.CrossEntropyLoss()
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
 
-        # MNIST images are 28x28 with no channel dim — need to add it
-        X_tensor = torch.FloatTensor(np.array(X)).unsqueeze(1).to(device)  # (N, 1, 28, 28)
+        X_tensor = torch.FloatTensor(np.array(X)).unsqueeze(1).to(device)
         y_tensor = torch.LongTensor(np.array(y)).to(device)
 
         n = X_tensor.size(0)
